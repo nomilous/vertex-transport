@@ -36,7 +36,10 @@ describe(filename, () => {
 
   afterEach('stop server', done => {
     if (!server) return done();
-    server.close().then(done);
+    server.close().then(done).catch(error => {
+      console.log(error);
+      done();
+    });
   });
 
   context('connecting', () => {
