@@ -112,9 +112,7 @@ describe.only(filename, () => {
       let count = 100;
       let startAt = Date.now();
 
-      vServerSocket.on('data', data => {
-        vServerSocket.write(data);
-      });
+      vServerSocket.on('data', vServerSocket.write);
 
       vSocket.on('data', data => {
         messages.push(data);
