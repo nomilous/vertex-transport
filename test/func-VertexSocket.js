@@ -167,13 +167,13 @@ describe(filename, () => {
 
     it('returns a promise', done => {
 
-      var promise = clientSocket.write();
-      expect(promise instanceof Promise).to.equal(true);
-      done();
+      clientSocket.write()
+
+        .then(done).catch(done);
 
     });
 
-    xit('resolves with meta (after ack)', done => {
+    it('resolves with meta (after ack)', done => {
 
       clientSocket.write()
 
