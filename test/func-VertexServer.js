@@ -2,25 +2,33 @@ const {basename} = require('path');
 const filename = basename(__filename);
 const expect = require('expect.js');
 
-const {Server, Socket} = require('../');
+const {VertexServer, VertexSocket} = require('../');
 
-describe(filename, function () {
+describe(filename, () => {
 
-  let server;
+  let server, client;
 
   beforeEach('clear server', () => {
     server = undefined;
   });
 
-  afterEach('close server', () => {
-    if (server) server.close();
+  afterEach('stop client', () => {
+    if (client) client.destroy();
+  });
+
+  afterEach('close server', (done) => {
+    if (server) {
+      server.close().then(done);
+      return;
+    }
+    done();
   });
 
   context('net', () => {
 
     it('listens with defaults', done => {
 
-      Server.listen()
+      VertexServer.listen()
 
         .then(_server => {
           server = _server;
@@ -31,9 +39,9 @@ describe(filename, function () {
 
     });
 
-    it('listens with specified', function (done) {
+    it('listens with specified', done => {
 
-      Server.listen({
+      VertexServer.listen({
         host: '0.0.0.0',
         port: 9999
       })
@@ -48,9 +56,9 @@ describe(filename, function () {
 
     });
 
-    it('rejects on error', function (done) {
+    it('rejects on error', done => {
 
-      Server.listen({
+      VertexServer.listen({
         host: '123.123.123.123',
         port: 9999
       })
@@ -64,14 +72,12 @@ describe(filename, function () {
 
     });
 
-    it('emits close on close', function (done) {
+    it('emits close on close', done => {
 
-      Server.listen()
+      VertexServer.listen()
 
         .then(_server => {
-          _server.on('close', function() {
-            done();
-          });
+          _server.on('close', done);
           _server.close();
         })
 
@@ -79,22 +85,38 @@ describe(filename, function () {
 
     });
 
-    it('close returns promise', function (done) {
+    it('close returns promise', done => {
 
-      Server.listen()
+      VertexServer.listen()
 
-        .then(_server => {
-          _server.close()
-            .then(function () {
-              done();
-            })
-        })
+        .then(server => server.close().then(done))
 
         .catch(done);
 
     });
 
-    it('emits connection on connection');
+    it('emits connection on connection', done => {
+
+      VertexServer.listen()
+
+        .then(_server => {
+
+          server = _server;
+          server.on('connection', socket => {
+            client = socket;
+            expect(socket instanceof VertexSocket).to.equal(true);
+            done();
+          })
+
+        })
+
+        .then(() => {
+          return VertexSocket.connect()
+        })
+
+        .catch(done);
+
+    });
 
   });
 

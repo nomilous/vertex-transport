@@ -1,4 +1,5 @@
 module.exports = {
-  Server: require('./lib/server'),
-  Socket: require('./lib/socket')
+  VertexServer: require('./lib/VertexServer'),
+  VertexSocket: require('./lib/VertexSocket'),
+  errors: require('./lib/errors')
 };
