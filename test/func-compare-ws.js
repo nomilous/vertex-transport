@@ -109,15 +109,16 @@ describe.only(filename, () => {
     it('compare vertex socket', done => {
 
       let messages = [];
-      let count = 10000;
+      let count = 10;
       let startAt = Date.now();
 
       vServerSocket.on('data', data => {
         vServerSocket.write(data);
-      })
+      });
 
       vSocket.on('data', data => {
         messages.push(data);
+        console.log(messages.length);
         if (messages.length >= count) {
 
           console.log('%d small frames - vertex socket: %dms', count, Date.now() - startAt);
@@ -125,7 +126,7 @@ describe.only(filename, () => {
           return done();
         }
         vSocket.write(data);
-      })
+      });
 
       vSocket.write({small: 'payload'});
 
