@@ -4,7 +4,7 @@ const filename = basename(__filename);
 const WebSocket = require('ws');
 const {VertexServer, VertexSocket} = require('../');
 
-describe(filename, () => {
+describe.only(filename, () => {
 
   let wsServer, vServer;
 
