@@ -60,6 +60,7 @@ describe(filename, () => {
     VertexSocket.connect()
       .then(client => {
         vSocket = client;
+        vSocket.write(); // prevent "Inactivity on connect" closing the socket
         done();
       })
       .catch(done);
