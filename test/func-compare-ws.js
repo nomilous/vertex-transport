@@ -109,7 +109,7 @@ describe.only(filename, () => {
     it('compare vertex socket', done => {
 
       let messages = [];
-      let count = 10;
+      let count = 100;
       let startAt = Date.now();
 
       vServerSocket.on('data', data => {
