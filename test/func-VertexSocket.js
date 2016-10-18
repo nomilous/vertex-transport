@@ -169,7 +169,9 @@ describe(filename, () => {
 
       clientSocket.write()
 
-        .then(done).catch(done);
+        .then(() => done())
+
+        .catch(done);
 
     });
 
