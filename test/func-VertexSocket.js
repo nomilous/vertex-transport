@@ -173,7 +173,7 @@ describe(filename, () => {
 
     });
 
-    it('resolves with meta (after ack)', done => {
+    xit('resolves with meta (after ack)', done => {
 
       clientSocket.write()
 
