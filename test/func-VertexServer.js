@@ -12,19 +12,15 @@ describe(filename, () => {
     server = undefined;
   });
 
-  afterEach('stop client', () => {
-    if (client) client.destroy();
-  });
-
   afterEach('close server', (done) => {
     if (server) {
-      server.close().then(done);
+      server.close().then(done).catch(done);
       return;
     }
     done();
   });
 
-  context('net', () => {
+  context('listen', () => {
 
     it('listens with defaults', done => {
 
@@ -72,24 +68,24 @@ describe(filename, () => {
 
     });
 
-    it('emits close on close', done => {
-
-      VertexServer.listen()
-
-        .then(_server => {
-          _server.on('close', done);
-          _server.close();
-        })
-
-        .catch(done);
-
-    });
+    // it('emits close on close', done => {
+    //
+    //   VertexServer.listen()
+    //
+    //     .then(_server => {
+    //       _server.on('close', done);
+    //       _server.close();
+    //     })
+    //
+    //     .catch(done);
+    //
+    // });
 
     it('close returns promise', done => {
 
       VertexServer.listen()
 
-        .then(server => server.close().then(done))
+        .then(server => server.close().then(done).catch(done))
 
         .catch(done);
 

@@ -17,7 +17,7 @@ describe.only(filename, () => {
 
   after('stop clients', () => {
     if (wsSocket) wsSocket.close();
-    if (vSocket) vSocket.destroy();
+    if (vSocket) vSocket.close();
   });
 
   after('stop websocket server', done => {
@@ -60,7 +60,7 @@ describe.only(filename, () => {
     VertexSocket.connect()
       .then(client => {
         vSocket = client;
-        return vSocket.write(); // prevent "Inactivity on connect" closing the socket
+        return vSocket.send(); // prevent "Inactivity on connect" closing the socket
       })
       .then(() => done())
       .catch(done);
@@ -109,24 +109,23 @@ describe.only(filename, () => {
     it('compare vertex socket', done => {
 
       let messages = [];
-      let count = 100;
+      let count = 10000;
       let startAt = Date.now();
 
-      vServerSocket.on('data', vServerSocket.write);
+      vServerSocket.on('data', vServerSocket.send);
 
       vSocket.on('data', data => {
         messages.push(data);
-        console.log(messages.length);
         if (messages.length >= count) {
 
           console.log('%d small frames - vertex socket: %dms', count, Date.now() - startAt);
 
           return done();
         }
-        vSocket.write(data);
+        vSocket.send(data);
       });
 
-      vSocket.write({small: 'payload'});
+      vSocket.send({small: 'payload'});
 
     });
 

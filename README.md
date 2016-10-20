@@ -6,4 +6,6 @@
 
 A server and socket for [vertex](https://github.com/nomilous/vertex).
 
-Warning… watch socket `error` events… `VertexSocketHeaderError`s
+Warning… watch socket `error` events… `VertexSocketDataError`s `terminate`
+
+Optional deps to speed things up...
