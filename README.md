@@ -9,3 +9,9 @@ A server and socket for [vertex](https://github.com/nomilous/vertex).
 Warning… watch socket `error` events… `VertexSocketDataError`s `terminate`
 
 Optional deps to speed things up...
+```
+  "optionalDependencies": {
+    "bufferutil": "^1.2.1",
+    "utf-8-validate": "^1.2.1"
+  }
+```
