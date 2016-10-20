@@ -12,7 +12,7 @@ A server and socket for [vertex](https://github.com/nomilous/vertex).
 
 Uses [ws](https://www.npmjs.com/package/ws) underneath. They suggest installing binary addons for speed: [bufferutil](https://www.npmjs.com/package/bufferutil) and [utf-8-validate](https://www.npmjs.com/package/utf-8-validate)
 
-
+<br />
 
 ### Quick Start
 
@@ -25,18 +25,25 @@ const {VertexServer, VertexSocket} = require('vertex-transport');
 [details](#server-details)
 
 ```javascript
-VertexServer.create()
+VertexServer.listen()
   .then(server => {})
   .catch(error => {});
 ```
 
-#### Start the client
+#### Connect a client
 
 [details](#client-details)
 
+```javascript
+VertexSocket.connect()
+  .then(socket => {})
+  .catch(error => {});
+
+// result on the server
+server.on('connection', socket => {});
 ```
 
-```
+<br />
 
 ### Errors
 
@@ -53,6 +60,8 @@ const {
 } = require('vertex-transport').errors;
 ```
 
+<br />
+
 **Emitted** in the socket error event handler.
 
 ```javascript
@@ -64,6 +73,8 @@ vertexSocket.on('error', error => {});
 ```javascript
 vertexSocket.send({data: 1}).catch(error => {})
 ```
+
+<br />
 
 #### VertexSocketDataError
 
@@ -94,13 +105,17 @@ The socket is immediately closed.
 
 * **Passed** in the `send()` promise rejection when the remote side assembled a response (ACK+data) that could not be encoded. This will usually only be encountered while developing.
 
-
+<br />
 
 ### Server Details
 
 
 
 
+
+
+
+<br />
 
 ### Client Details
 
