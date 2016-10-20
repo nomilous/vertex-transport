@@ -324,7 +324,7 @@ describe(filename, () => {
 
       });
 
-      it('rejects on specified timeout and receives late response error', done => {
+      it('rejects on specified timeout and receives late response data', done => {
 
         let rejected = false;
 
@@ -336,14 +336,25 @@ describe(filename, () => {
           }, 100);
         };
 
+        serverSocket.on('data', (data, meta, reply) => {
+          reply('A', 1);
+          reply('B', 2);
+          reply('C', 3);
+        });
+
         clientSocket.on('error', error => {
           try {
             expect(rejected).to.equal(true);
-            expect(error.name).to.equal('VertexSocketLagError');
-            expect(error.message).to.equal('Response after timeout');
+            expect(error.name).to.equal('VertexSocketReplyError');
+            expect(error.message).to.equal('Stray ack or nak');
             expect(typeof error.meta.seq).to.equal('number');
             expect(typeof error.meta.ts).to.equal('number');
             expect(error.meta.ack).to.equal(true);
+            expect(error.data).to.eql({
+              A: 1,
+              B: 2,
+              C: 3
+            });
             done();
           } catch (e) {
             done(e);
@@ -365,6 +376,57 @@ describe(filename, () => {
           .catch(done);
 
       });
+
+
+      it('rejects on specified timeout and receives late response error', done => {
+
+        let rejected = false;
+
+        // server delays ack
+        let _sendAck = serverSocket._sendAck;
+        serverSocket._sendAck = function () {
+          setTimeout(() => {
+            _sendAck.apply(serverSocket, arguments);
+          }, 100);
+        };
+
+        serverSocket.on('data', (data, meta, reply) => {
+          let circular = {};
+          circular.circular = circular;
+          reply('data', circular);
+        });
+
+        clientSocket.on('error', error => {
+          try {
+            expect(rejected).to.equal(true);
+            expect(error.name).to.equal('VertexSocketReplyError');
+            expect(error.message).to.equal('Stray ack or nak');
+            expect(typeof error.meta.seq).to.equal('number');
+            expect(typeof error.meta.ts).to.equal('number');
+            expect(error.meta.nak).to.equal(true);
+            expect(typeof error.error).to.equal('object');
+            done();
+          } catch (e) {
+            done(e);
+          }
+        });
+
+        const TIMEOUT = 1;
+
+        clientSocket.send({}, TIMEOUT)
+
+          .catch(error => {
+            expect(error.name).to.equal('VertexSocketTimeoutError');
+            expect(error.message).to.equal('Ack timeout');
+            expect(typeof error.meta.seq).to.equal('number');
+            expect(typeof error.meta.ts).to.equal('number');
+            rejected = true;
+          })
+
+          .catch(done);
+
+      });
+
 
       it('rejects for all pending acks on socket close', done => {
 
@@ -446,14 +508,14 @@ describe(filename, () => {
 
           serverMeta = meta;
 
-          reply('data', new Promise(resolve => resolve('XYZ')));
+          reply('tag', new Promise(resolve => resolve('XYZ')));
 
         });
 
         clientSocket.send()
 
           .then(({data, meta}) => {
-            expect(data).to.equal('XYZ');
+            expect(data.tag).to.equal('XYZ');
             expect(meta).to.eql(serverMeta);
             done();
           })
@@ -481,14 +543,13 @@ describe(filename, () => {
         });
 
         clientSocket.send()
-
           .then(result => {
-            expect(result[0]).to.equal('DATA0');
-            expect(result[1] instanceof Error).to.equal(true);
-            expect(result[1]._error).to.equal(true);
-            expect(result[2]).to.equal('DATA2');
-            expect(result.data1).to.equal('abc');
-            expect(result.data2).to.equal(123);
+            expect(result.data[0]).to.equal('DATA0');
+            expect(result.data[1] instanceof Error).to.equal(true);
+            expect(result.data[1]._error).to.equal(true);
+            expect(result.data[2]).to.equal('DATA2');
+            expect(result.data.data1).to.equal('abc');
+            expect(result.data.data2).to.equal(123);
             done();
           })
 
