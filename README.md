@@ -367,7 +367,7 @@ Replies can be promises.
 
 ```javascript
 socket.on('data', (data, meta, reply) => {
-  reply('tag', new Promise(resolve => resolve(1));
+  reply('tag', new Promise(resolve => resolve(1)));
 });
 ```
 
