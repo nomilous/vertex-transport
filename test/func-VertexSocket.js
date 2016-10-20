@@ -664,13 +664,45 @@ describe(filename, () => {
 
     context('ping and pong', () => {
 
-      it('can send ping from client');
+      it('can send ping from client to server', done => {
 
-      it('can send ping from server');
+        let gotPing = false;
+        serverSocket.on('ping', data => {
+          expect(data.toString()).to.equal('A');
+          gotPing = true
+        });
+
+        clientSocket.on('pong', data => {
+          expect(data.toString()).to.equal('A');
+          expect(gotPing).to.equal(true);
+          done();
+        });
+
+        clientSocket.ping('A');
+
+      });
+
+      it('can send ping from server', done => {
+
+        let gotPing = false;
+        clientSocket.on('ping', data => {
+          expect(data.toString()).to.equal('A');
+          gotPing = true
+        });
+
+        serverSocket.on('pong', data => {
+          expect(data.toString()).to.equal('A');
+          expect(gotPing).to.equal(true);
+          done();
+        });
+
+        serverSocket.ping('A');
+
+      });
 
     });
 
-    xcontext('pause and resume', () => {
+    context('pause and resume', () => {
 
       it('can pause and resume stream', done => {
 
@@ -692,9 +724,9 @@ describe(filename, () => {
         }, 300);
 
         Promise.all([
-          clientSocket.write(1),
-          clientSocket.write(2),
-          clientSocket.write(3)
+          clientSocket.send(1),
+          clientSocket.send(2),
+          clientSocket.send(3)
         ])
 
           .then(_results => {
@@ -730,18 +762,6 @@ describe(filename, () => {
     it('where appropriate 2');
 
     it('where appropriate 3');
-
-  });
-
-  xcontext('frame size', () => {
-
-    xit('negotiates max frame size');
-
-  });
-
-  xcontext('large frames', () => {
-
-    it('breaks large payloads into maxFrameSize');
 
   });
 
