@@ -4,7 +4,7 @@
 
 # vertex-transport
 
-**Requires node v6.0.0**
+**Requires node ^6.0.0**
 
 `npm install vertex-transport —save`
 
