@@ -68,19 +68,6 @@ describe(filename, () => {
 
     });
 
-    // it('emits close on close', done => {
-    //
-    //   VertexServer.listen()
-    //
-    //     .then(_server => {
-    //       _server.on('close', done);
-    //       _server.close();
-    //     })
-    //
-    //     .catch(done);
-    //
-    // });
-
     it('close returns promise', done => {
 
       VertexServer.listen()
@@ -115,6 +102,8 @@ describe(filename, () => {
     });
 
   });
+
+  return;
 
   context('tls', function () {
 
