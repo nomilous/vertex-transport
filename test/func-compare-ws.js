@@ -75,7 +75,7 @@ describe.only(filename, () => {
     // 10000 small frames - vertex socket: 1373ms
 
 
-    this.timeout(10000);
+    this.timeout(100000);
 
     it('compare websocket', done => {
 
