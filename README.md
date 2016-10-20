@@ -1,10 +1,10 @@
+**using node ^6.0.0**
+
 [![npm](https://img.shields.io/npm/v/vertex-transport.svg)](https://www.npmjs.com/package/vertex-transport)
 [![Build Status](https://travis-ci.org/nomilous/vertex-transport.svg?branch=master)](https://travis-ci.org/nomilous/vertex-transport)
 [![Coverage Status](https://coveralls.io/repos/nomilous/vertex-transport/badge.svg?branch=master&service=github)](https://coveralls.io/github/nomilous/vertex-transport?branch=master)
 
 # vertex-transport
-
-**Requires node ^6.0.0**
 
 `npm install vertex-transport —save`
 
