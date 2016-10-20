@@ -22,7 +22,7 @@ const {VertexServer, VertexSocket} = require('vertex-transport');
 
 #### Start the server
 
-[details](#Server Details)
+[details](#server-details)
 
 ```javascript
 VertexServer.create()
@@ -30,9 +30,13 @@ VertexServer.create()
   .catch(error => {});
 ```
 
+#### Start the client
 
+[details](#client-details)
 
+```
 
+```
 
 ### Errors
 
@@ -98,5 +102,5 @@ The socket is immediately closed.
 
 
 
-### Client
+### Client Details
 
