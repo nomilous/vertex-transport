@@ -143,56 +143,48 @@ describe(filename, () => {
 
       it('disconnects the socket on bad payload', done => {
 
-        setTimeout(() => {
+        let serverError;
+        serverSocket.on('error', error => serverError = error);
 
-          let serverError;
-          serverSocket.on('error', error => serverError = error);
+        let clientError;
+        clientSocket.on('error', error => clientError = error);
 
-          let clientError;
-          clientSocket.on('error', error => clientError = error);
+        clientSocket.on('close', (code, message) => {
+          expect(code).to.equal(1003);
+          expect(message).to.equal('SyntaxError: Unexpected end of JSON input');
+          expect(clientError.name).to.equal('VertexSocketDataError');
+          expect(serverError.from.address).to.equal('127.0.0.1');
+          delete serverError.from;
+          delete clientError.from;
+          expect(serverError).to.eql(clientError);
+          done();
+        });
 
-          clientSocket.on('close', (code, message) => {
-            expect(code).to.equal(1003);
-            expect(message).to.equal('SyntaxError: Unexpected end of JSON input');
-            expect(clientError.name).to.equal('VertexSocketDataError');
-            expect(serverError.from.address).to.equal('127.0.0.1');
-            delete serverError.from;
-            delete clientError.from;
-            expect(serverError).to.eql(clientError);
-            done();
-          });
-
-          clientSocket._socket.send('');
-
-        }, 100);
+        clientSocket._socket.send('');
 
       });
 
       it('disconnects the socket on missing meta', done => {
 
-        setTimeout(() => {
+        let serverError;
+        serverSocket.on('error', error => serverError = error);
 
-          let serverError;
-          serverSocket.on('error', error => serverError = error);
+        let clientError;
+        clientSocket.on('error', error => clientError = error);
 
-          let clientError;
-          clientSocket.on('error', error => clientError = error);
+        clientSocket.on('close', (code, message) => {
+          expect(code).to.equal(1003);
+          expect(message).to.equal('Missing meta');
+          expect(clientError.name).to.equal('VertexSocketDataError');
 
-          clientSocket.on('close', (code, message) => {
-            expect(code).to.equal(1003);
-            expect(message).to.equal('Missing meta');
-            expect(clientError.name).to.equal('VertexSocketDataError');
+          delete serverError.from;
+          delete clientError.from;
 
-            delete serverError.from;
-            delete clientError.from;
+          expect(serverError).to.eql(clientError);
+          done();
+        });
 
-            expect(serverError).to.eql(clientError);
-            done();
-          });
-
-          clientSocket._socket.send('[]');
-
-        }, 100);
+        clientSocket._socket.send('[]');
 
       });
 
@@ -334,78 +326,70 @@ describe(filename, () => {
 
       it('rejects on specified timeout and receives late response error', done => {
 
-        setTimeout(() => {
+        let rejected = false;
 
-          let rejected = false;
+        // server delays ack
+        let _sendAck = serverSocket._sendAck;
+        serverSocket._sendAck = function () {
+          setTimeout(() => {
+            _sendAck.apply(serverSocket, arguments);
+          }, 100);
+        };
 
-          // server delays ack
-          let _sendAck = serverSocket._sendAck;
-          serverSocket._sendAck = function () {
-            setTimeout(() => {
-              _sendAck.apply(serverSocket, arguments);
-            }, 100);
-          };
-
-          clientSocket.on('error', error => {
-            try {
-              expect(rejected).to.equal(true);
-              expect(error.name).to.equal('VertexSocketLagError');
-              expect(error.message).to.equal('Response after timeout');
-              expect(typeof error.meta.seq).to.equal('number');
-              expect(typeof error.meta.ts).to.equal('number');
-              expect(error.meta.ack).to.equal(true);
-              done();
-            } catch (e) {
-              done(e);
-            }
-          });
-
-          const TIMEOUT = 1;
-
-          clientSocket.send({}, TIMEOUT)
-
-            .catch(error => {
-              expect(error.name).to.equal('VertexSocketTimeoutError');
-              expect(error.message).to.equal('Ack timeout');
-              expect(typeof error.meta.seq).to.equal('number');
-              expect(typeof error.meta.ts).to.equal('number');
-              rejected = true;
-            })
-
-            .catch(done);
-
+        clientSocket.on('error', error => {
+          try {
+            expect(rejected).to.equal(true);
+            expect(error.name).to.equal('VertexSocketLagError');
+            expect(error.message).to.equal('Response after timeout');
+            expect(typeof error.meta.seq).to.equal('number');
+            expect(typeof error.meta.ts).to.equal('number');
+            expect(error.meta.ack).to.equal(true);
+            done();
+          } catch (e) {
+            done(e);
+          }
         });
+
+        const TIMEOUT = 1;
+
+        clientSocket.send({}, TIMEOUT)
+
+          .catch(error => {
+            expect(error.name).to.equal('VertexSocketTimeoutError');
+            expect(error.message).to.equal('Ack timeout');
+            expect(typeof error.meta.seq).to.equal('number');
+            expect(typeof error.meta.ts).to.equal('number');
+            rejected = true;
+          })
+
+          .catch(done);
 
       });
 
       it('rejects for all pending acks on socket close', done => {
 
+        serverSocket._sendAck = () => {
+        };
+
+        var rejections = [];
+        clientSocket.send(1).catch(rejections.push.bind(rejections));
+        clientSocket.send(2).catch(rejections.push.bind(rejections));
+        clientSocket.send(3).catch(rejections.push.bind(rejections));
+
         setTimeout(() => {
+          serverSocket.close();
+        }, 100);
 
-          serverSocket._sendAck = () => {
-          };
-
-          var rejections = [];
-          clientSocket.send(1).catch(rejections.push.bind(rejections));
-          clientSocket.send(2).catch(rejections.push.bind(rejections));
-          clientSocket.send(3).catch(rejections.push.bind(rejections));
-
+        clientSocket.on('close', () => {
           setTimeout(() => {
-            serverSocket.close();
-          }, 100);
-
-          clientSocket.on('close', () => {
-            setTimeout(() => {
-              expect(rejections.length).to.equal(3);
-              expect(rejections[0].name).to.equal('VertexSocketClosedError');
-              expect(rejections[0].message).to.equal('Closed while awaiting ack');
-              expect(typeof rejections[0].meta.ts).to.equal('number');
-              expect(typeof rejections[0].meta.seq).to.equal('number');
-              done();
-            }, 10);
-          });
-
-        }, 200);
+            expect(rejections.length).to.equal(3);
+            expect(rejections[0].name).to.equal('VertexSocketClosedError');
+            expect(rejections[0].message).to.equal('Closed while awaiting ack');
+            expect(typeof rejections[0].meta.ts).to.equal('number');
+            expect(typeof rejections[0].meta.seq).to.equal('number');
+            done();
+          }, 10);
+        });
 
       });
 
@@ -434,23 +418,19 @@ describe(filename, () => {
 
         let receivedMeta;
 
-        setTimeout(() => {
+        serverSocket.on('data', (data, meta) => {
+          expect(data).to.eql({x: 1});
+          receivedMeta = meta;
+        });
 
-          serverSocket.on('data', (data, meta) => {
-            expect(data).to.eql({x: 1});
-            receivedMeta = meta;
-          });
+        clientSocket.send({x: 1})
 
-          clientSocket.send({x: 1})
+          .then(result => {
+            expect(result.meta).to.eql(receivedMeta);
+            done();
+          })
 
-            .then(result => {
-              expect(result.meta).to.eql(receivedMeta);
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
@@ -460,189 +440,161 @@ describe(filename, () => {
 
       it('resolves with single tagged result', done => {
 
-        setTimeout(() => {
+        let serverMeta;
 
-          let serverMeta;
+        serverSocket.on('data', (data, meta, reply) => {
 
-          serverSocket.on('data', (data, meta, reply) => {
+          serverMeta = meta;
 
-            serverMeta = meta;
+          reply('data', new Promise(resolve => resolve('XYZ')));
 
-            reply('data', new Promise(resolve => resolve('XYZ')));
+        });
 
-          });
+        clientSocket.send()
 
-          clientSocket.send()
+          .then(({data, meta}) => {
+            expect(data).to.equal('XYZ');
+            expect(meta).to.eql(serverMeta);
+            done();
+          })
 
-            .then(({data, meta}) => {
-              expect(data).to.equal('XYZ');
-              expect(meta).to.eql(serverMeta);
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
       it('resolves with multiple tagged results', done => {
 
-        setTimeout(() => {
+        serverSocket.on('data', (data, meta, reply) => {
+          reply(new Promise((resolve, reject) => {
+            resolve('DATA0');
+          }));
+          reply(new Promise((resolve, reject) => {
+            let e = new Error('some problem');
+            e.code = 0;
+            reject(e);
+          }));
+          reply(new Promise((resolve, reject) => {
+            resolve('DATA2');
+          }));
+          reply('data1', 'abc');
+          reply('data2', 123);
+        });
 
-          serverSocket.on('data', (data, meta, reply) => {
-            reply(new Promise((resolve, reject) => {
-              resolve('DATA0');
-            }));
-            reply(new Promise((resolve, reject) => {
-              let e = new Error('some problem');
-              e.code = 0;
-              reject(e);
-            }));
-            reply(new Promise((resolve, reject) => {
-              resolve('DATA2');
-            }));
-            reply('data1', 'abc');
-            reply('data2', 123);
-          });
+        clientSocket.send()
 
-          clientSocket.send()
+          .then(result => {
+            expect(result[0]).to.equal('DATA0');
+            expect(result[1] instanceof Error).to.equal(true);
+            expect(result[1]._error).to.equal(true);
+            expect(result[2]).to.equal('DATA2');
+            expect(result.data1).to.equal('abc');
+            expect(result.data2).to.equal(123);
+            done();
+          })
 
-            .then(result => {
-              expect(result[0]).to.equal('DATA0');
-              expect(result[1] instanceof Error).to.equal(true);
-              expect(result[1]._error).to.equal(true);
-              expect(result[2]).to.equal('DATA2');
-              expect(result.data1).to.equal('abc');
-              expect(result.data2).to.equal(123);
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
       it('naks with remote encode error', done => {
 
-        setTimeout(() => {
+        let circular = {};
+        circular.circular = circular;
 
-          let circular = {};
-          circular.circular = circular;
+        serverSocket.on('data', (data, meta, reply) => reply(circular));
 
-          serverSocket.on('data', (data, meta, reply) => reply(circular));
+        clientSocket.send()
 
-          clientSocket.send()
+          .catch(error => {
+            expect(error.name).to.equal('VertexSocketRemoteEncodeError');
+            expect(error.message).to.equal('TypeError: Converting circular structure to JSON');
+            expect(typeof error.meta).to.equal('object');
+            done();
+          })
 
-            .catch(error => {
-              expect(error.name).to.equal('VertexSocketRemoteEncodeError');
-              expect(error.message).to.equal('TypeError: Converting circular structure to JSON');
-              expect(typeof error.meta).to.equal('object');
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
       it('cannot send buffer in reply (as promise)', done => {
 
-        setTimeout(() => {
+        serverSocket.on('data', (data, meta, reply) => {
+          reply(new Promise(resolve => {
+            resolve(Buffer.alloc(8));
+          }));
+        });
 
-          serverSocket.on('data', (data, meta, reply) => {
-            reply(new Promise(resolve => {
-              resolve(Buffer.alloc(8));
-            }));
-          });
+        clientSocket.send()
 
-          clientSocket.send()
+          .catch(error => {
+            expect(error.name).to.equal('VertexSocketRemoteEncodeError');
+            expect(error.message).to.equal('Cannot send buffer in reply');
+            expect(typeof error.meta).to.equal('object');
+            done();
+          })
 
-            .catch(error => {
-              expect(error.name).to.equal('VertexSocketRemoteEncodeError');
-              expect(error.message).to.equal('Cannot send buffer in reply');
-              expect(typeof error.meta).to.equal('object');
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
 
       it('cannot send buffer in reply', done => {
 
-        setTimeout(() => {
+        serverSocket.on('data', (data, meta, reply) => reply(Buffer.alloc(8)));
 
-          serverSocket.on('data', (data, meta, reply) => reply(Buffer.alloc(8)));
+        clientSocket.send()
 
-          clientSocket.send()
+          .catch(error => {
+            expect(error.name).to.equal('VertexSocketRemoteEncodeError');
+            expect(error.message).to.equal('Cannot send buffer in reply');
+            expect(typeof error.meta).to.equal('object');
+            done();
+          })
 
-            .catch(error => {
-              expect(error.name).to.equal('VertexSocketRemoteEncodeError');
-              expect(error.message).to.equal('Cannot send buffer in reply');
-              expect(typeof error.meta).to.equal('object');
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
 
       it('allows sending reply as nak without specific error', done => {
 
-        setTimeout(() => {
+        serverSocket.on('data', (data, meta, reply) => {
+          reply('nak', true);
+        });
 
-          serverSocket.on('data', (data, meta, reply) => {
-            reply('nak', true);
-          });
+        clientSocket.send()
 
-          clientSocket.send()
+          .catch(error => {
+            expect(error.name).to.equal('Error');
+            expect(error.message).to.equal('Nak');
+            expect(typeof error.meta).to.equal('object');
+            done();
+          })
 
-            .catch(error => {
-              expect(error.name).to.equal('Error');
-              expect(error.message).to.equal('Nak');
-              expect(typeof error.meta).to.equal('object');
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
       it('allows sending reply as nak with specific error', done => {
 
-        setTimeout(() => {
+        serverSocket.on('data', (data, meta, reply) => {
+          let e = new Error('Cannot do thing x');
+          e.name = 'MyCustomError';
+          e.why = 'reason text';
+          reply('nak', e);
+        });
 
-          serverSocket.on('data', (data, meta, reply) => {
-            let e = new Error('Cannot do thing x');
-            e.name = 'MyCustomError';
-            e.why = 'reason text';
-            reply('nak', e);
-          });
+        clientSocket.send()
 
-          clientSocket.send()
+          .catch(error => {
+            expect(error.name).to.equal('MyCustomError');
+            expect(error.message).to.equal('Cannot do thing x');
+            expect(error.why).to.equal('reason text');
+            expect(typeof error.meta).to.equal('object');
+            done();
+          })
 
-            .catch(error => {
-              expect(error.name).to.equal('MyCustomError');
-              expect(error.message).to.equal('Cannot do thing x');
-              expect(error.why).to.equal('reason text');
-              expect(typeof error.meta).to.equal('object');
-              done();
-            })
-
-            .catch(done);
-
-        }, 200);
+          .catch(done);
 
       });
 
