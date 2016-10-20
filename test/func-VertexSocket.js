@@ -473,7 +473,6 @@ describe(filename, () => {
 
     });
 
-
     context('receiving data', () => {
 
       it('emits data and meta', done => {
@@ -661,7 +660,6 @@ describe(filename, () => {
 
     });
 
-
     context('ping and pong', () => {
 
       it('can send ping from client to server', done => {
@@ -743,7 +741,7 @@ describe(filename, () => {
 
   return;
 
-  xcontext('wait for ack', () => {
+  xcontext('optional wait for ack', () => {
 
     it('does not send the next frame until ack of previous');
 
@@ -765,5 +763,4 @@ describe(filename, () => {
 
   });
 
-})
-;
+});
