@@ -141,6 +141,49 @@ describe(filename, () => {
 
     context('sending data', () => {
 
+      it('disconnects the socket on differing protocol version (major)', done => {
+
+        let serverError;
+        serverSocket.on('error', error => serverError = error);
+
+        let clientError;
+        clientSocket.on('error', error => clientError = error);
+
+        clientSocket.on('close', (code, message) => {
+          expect(code).to.equal(1003);
+          expect(message).to.equal('Error: Protocol mismatch');
+          expect(clientError.name).to.equal('VertexSocketDataError');
+          expect(serverError.from.address).to.equal('127.0.0.1');
+          delete serverError.from;
+          delete clientError.from;
+          expect(serverError).to.eql(clientError);
+          done();
+        });
+
+        clientSocket._socket.send('2.0[]');
+
+      });
+
+      it('allows differing protocol version (minor)', done => {
+
+        let serverError;
+        serverSocket.on('error', error => serverError = error);
+
+        let clientError;
+        clientSocket.on('error', error => clientError = error);
+
+        clientSocket._waiting[9999] = {
+          resolve: result => {
+            expect(typeof clientError == 'undefined').to.equal(true);
+            expect(typeof serverError == 'undefined').to.equal(true);
+            done();
+          }
+        };
+
+        clientSocket._socket.send('1.9999[{"seq": 9999, "ts": 1477296513795}]');
+
+      });
+
       it('disconnects the socket on bad payload', done => {
 
         let serverError;
@@ -160,7 +203,7 @@ describe(filename, () => {
           done();
         });
 
-        clientSocket._socket.send('');
+        clientSocket._socket.send('1.0[');
 
       });
 
@@ -184,7 +227,7 @@ describe(filename, () => {
           done();
         });
 
-        clientSocket._socket.send('[]');
+        clientSocket._socket.send('1.0[]');
 
       });
 
@@ -404,7 +447,7 @@ describe(filename, () => {
             expect(typeof error.meta.seq).to.equal('number');
             expect(typeof error.meta.ts).to.equal('number');
             expect(error.meta.nak).to.equal(true);
-            expect(typeof error.error).to.equal('object');
+            expect(typeof error.data).to.equal('object');
             done();
           } catch (e) {
             done(e);

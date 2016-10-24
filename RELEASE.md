@@ -7,3 +7,7 @@
 * added `VertexSocket`
 * added `VertexServer`
 
+### 2.0.0 2016/10/24
+
+* added protocol version number 1.0
+* switched to 'version + [meta, data]' in transport
