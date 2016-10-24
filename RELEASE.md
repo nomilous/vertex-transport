@@ -11,3 +11,7 @@
 
 * added protocol version number 1.0
 * switched to 'version + [meta, data]' in transport
+
+### 2.0.1 2016/10/24
+
+* no .data in promise resolve if undefined
