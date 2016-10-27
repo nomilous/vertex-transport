@@ -15,3 +15,8 @@
 ### 2.0.1 2016/10/24
 
 * no .data in promise resolve if undefined
+
+### 3.0.0 2016/10/27
+
+* moved .data.subkeys in promise resolve to .subkeys
+

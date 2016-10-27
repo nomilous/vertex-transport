@@ -3,7 +3,7 @@ const filename = basename(__filename);
 
 const {VertexServer, VertexSocket} = require('../');
 
-describe(filename, () => {
+describe(filename, function () {
 
   let server;
 
@@ -24,7 +24,10 @@ describe(filename, () => {
     done();
   });
 
-  it('sends 10000 messages', done => {
+  let requestCount = 10000;
+  it('sends ' + requestCount + ' messages', function (done) {
+
+    this.timeout(10000);
 
     server.on('connection', socket => {
       socket.on('data', (data, meta, reply) => {
@@ -32,7 +35,7 @@ describe(filename, () => {
       });
     });
 
-    let requestCount = 1000;
+
     let startAt = Date.now();
 
     VertexSocket.connect()
@@ -47,7 +50,7 @@ describe(filename, () => {
 
       .then(replies => {
 
-        console.log('\n%d requests in %dms\n', replies.length, Date.now() - startAt);
+        // console.log('\n%d requests in %dms\n', replies.length, Date.now() - startAt);
 
       })
 

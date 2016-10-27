@@ -556,8 +556,8 @@ describe(filename, () => {
 
         clientSocket.send()
 
-          .then(({data, meta}) => {
-            expect(data.tag).to.equal('XYZ');
+          .then(({tag, meta}) => {
+            expect(tag).to.equal('XYZ');
             expect(meta).to.eql(serverMeta);
             done();
           })
@@ -586,12 +586,12 @@ describe(filename, () => {
 
         clientSocket.send()
           .then(result => {
-            expect(result.data[0]).to.equal('DATA0');
-            expect(result.data[1] instanceof Error).to.equal(true);
-            expect(result.data[1]._error).to.equal(true);
-            expect(result.data[2]).to.equal('DATA2');
-            expect(result.data.data1).to.equal('abc');
-            expect(result.data.data2).to.equal(123);
+            expect(result[0]).to.equal('DATA0');
+            expect(result[1] instanceof Error).to.equal(true);
+            expect(result[1]._error).to.equal(true);
+            expect(result[2]).to.equal('DATA2');
+            expect(result.data1).to.equal('abc');
+            expect(result.data2).to.equal(123);
             done();
           })
 
