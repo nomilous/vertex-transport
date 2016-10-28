@@ -250,6 +250,7 @@ describe(filename, () => {
             expect(typeof result.meta).to.equal('object');
             expect(typeof result.meta.seq).to.equal('number');
             expect(typeof result.meta.ts).to.equal('number');
+            expect(result.meta.len).to.equal(53);
             done();
           })
 
@@ -530,6 +531,9 @@ describe(filename, () => {
         clientSocket.send({x: 1})
 
           .then(result => {
+            delete result.meta.len;
+            expect(receivedMeta.len).to.equal(41);
+            delete receivedMeta.len;
             expect(result.meta).to.eql(receivedMeta);
             done();
           })
@@ -558,6 +562,8 @@ describe(filename, () => {
 
           .then(({tag, meta}) => {
             expect(tag).to.equal('XYZ');
+            delete meta.len;
+            delete serverMeta.len;
             expect(meta).to.eql(serverMeta);
             done();
           })

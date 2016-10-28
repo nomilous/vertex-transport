@@ -20,3 +20,6 @@
 
 * moved .data.subkeys in promise resolve to .subkeys
 
+### 3.1.0 2016/10/28
+
+* added payload .len to meta

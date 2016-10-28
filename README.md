@@ -326,10 +326,15 @@ The meta contains:
 
 ```javascript
 {
-  seq: 0, // each sending socket increments this with each transmission
-  ts: 1476981609811 // the time the message was sent `Date.now()`
+  seq: 0,
+  ts: 1476981609811, // the time the message was sent `Date.now()`
+  len: 53 // length of payload in bytes  
 }
 ```
+
+* **seq** is a number assigned at `send()`. It is unique only within the socket pair. It is incremented with each send and starts at 0
+* **ts** is a timestamp. It contains the time the `send()` was made.
+* **len** is the byte length of the message.
 
 Once all handlers subscribed to the 'data' event have run, an ACK is sent back to the sender with the same meta (with the ack flag set).
 
@@ -337,7 +342,7 @@ The reply function can be used to piggy-back response data in the ACK.
 
 ```javascript
 receivingSocket.on('data', (data, meta, reply) => {
-  if (data.get == 'thing') return reply('aThing', new Thing);
+  if (data.get == 'thing') return reply(  'aThing' , new Thing);
 });
 ```
 
@@ -345,9 +350,17 @@ The thing will then be available as the sender's promise resolves.
 
 ```javascript
 sendingSocket.send({get: 'thing'})
-  .then(result => {
-    result.data.aThing; // Will not be an instanceof Thing
-                        // but will have all enumerable properties of thing
+  .then(data => {
+  
+    data.aThing;
+  
+    // meta is there too, but not enumerable
+    // data.meta === {
+    //   seq: // original seq
+    //   ts:  // original send() time
+    //   len: // reply data size
+    //   ack: true
+    // }
   })
   .catch
 ```
