@@ -250,6 +250,8 @@ returns: undefined
 * data: String, Number, Buffer, null, Object (non-circular) to send.
 * optionalTimeout: Optional milliseconds to timeout awaiting reply.
 
+Default is no timeout. 0 is also no timeout.
+
 returns: Promise
 
 ```javascript
