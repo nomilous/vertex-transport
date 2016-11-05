@@ -1,8 +1,8 @@
 {
   "name": "vertex-transport",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "engines": {
-    "node": "^6.0.0"
+    "node": ">=6"
   },
   "description": "A server and socket for vertex.",
   "main": "index.js",
